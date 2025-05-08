@@ -3,112 +3,148 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>YouTube Music Player</title>
+  <title>YouTube Audio Player</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #121212;
-      color: #fff;
+      background: #000;
+      color: white;
       padding: 20px;
       text-align: center;
     }
-    #search-input {
+
+    input[type="text"] {
       width: 80%;
-      padding: 12px;
+      padding: 10px;
       font-size: 16px;
-      border-radius: 10px;
+      background: #222;
+      color: white;
       border: none;
+      border-radius: 10px;
     }
+
     #results {
+      margin-top: 20px;
       display: flex;
       flex-wrap: wrap;
+      gap: 15px;
       justify-content: center;
-      gap: 12px;
-      margin-top: 20px;
     }
+
     .video-card {
-      background: #1e1e1e;
-      padding: 10px;
+      background: #111;
       width: 180px;
       border-radius: 10px;
+      padding: 10px;
     }
+
     .video-card img {
       width: 100%;
       border-radius: 8px;
     }
+
+    .video-card p {
+      font-size: 14px;
+      margin: 5px 0;
+    }
+
     .video-card button {
-      margin-top: 6px;
+      margin: 3px;
       padding: 6px 10px;
-      font-size: 13px;
       border: none;
       border-radius: 5px;
+      font-size: 12px;
       cursor: pointer;
     }
+
     .play-btn { background: #00b894; color: white; }
     .fav-btn { background: #0984e3; color: white; }
 
-    #music-player {
-      display: none;
+    #player-bar {
       position: fixed;
       bottom: 0;
       left: 0;
       width: 100%;
-      background: #1f1f1f;
-      padding: 15px;
-      box-shadow: 0 -2px 10px rgba(0,0,0,0.5);
+      background: #181818;
+      border-top: 1px solid #333;
+      padding: 10px;
+      display: none;
     }
-    #player-thumbnail {
-      width: 80px;
-      height: 80px;
-      border-radius: 10px;
+
+    #player-bar img {
+      width: 60px;
+      height: 60px;
+      border-radius: 8px;
     }
+
     #player-info {
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: start;
       gap: 15px;
     }
+
+    #player-details {
+      text-align: left;
+    }
+
     #player-controls {
-      margin-top: 10px;
       display: flex;
       justify-content: center;
-      gap: 20px;
-    }
-    #progress {
-      width: 100%;
-      height: 4px;
-      background: #333;
+      gap: 30px;
       margin-top: 10px;
-      border-radius: 2px;
     }
+
+    #fav-list {
+      margin-top: 30px;
+      text-align: left;
+    }
+
+    #fav-list a {
+      display: block;
+      color: #74b9ff;
+      margin-bottom: 5px;
+      text-decoration: none;
+    }
+
+    #progress {
+      height: 3px;
+      background: #444;
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 5px;
+    }
+
     #progress-bar {
       height: 100%;
       width: 0%;
       background: #00cec9;
-      border-radius: 2px;
     }
   </style>
 </head>
 <body>
-  <h2>YouTube Music Player</h2>
-  <input type="text" id="search-input" placeholder="Search for songs..." />
+
+  <h2>YouTube Audio Player</h2>
+  <input type="text" id="search-input" placeholder="Search for music...">
   <div id="results"></div>
+
+  <h3>Your Favorites</h3>
   <div id="fav-list"></div>
 
-  <!-- Hidden Player UI -->
-  <div id="music-player">
+  <!-- Music player bar -->
+  <div id="player-bar">
     <div id="player-info">
-      <img id="player-thumbnail" src="" />
-      <div>
-        <div id="player-title"></div>
+      <img id="player-thumbnail" src="">
+      <div id="player-details">
+        <div id="player-title" style="font-weight: bold;"></div>
         <button id="fav-btn" class="fav-btn">Favorite</button>
       </div>
     </div>
     <div id="progress"><div id="progress-bar"></div></div>
     <div id="player-controls">
-      <button onclick="prevSong()">⏮️</button>
-      <button id="pausePlayBtn">⏸️</button>
-      <button onclick="nextSong()">⏭️</button>
+      <button onclick="prevSong()">⏮</button>
+      <button id="pausePlayBtn">⏸</button>
+      <button onclick="nextSong()">⏭</button>
     </div>
   </div>
 
@@ -117,7 +153,8 @@
     const searchInput = document.getElementById("search-input");
     const resultsDiv = document.getElementById("results");
     const favList = document.getElementById("fav-list");
-    const musicPlayer = document.getElementById("music-player");
+
+    const playerBar = document.getElementById("player-bar");
     const playerThumbnail = document.getElementById("player-thumbnail");
     const playerTitle = document.getElementById("player-title");
     const favBtn = document.getElementById("fav-btn");
@@ -146,7 +183,7 @@
             const card = document.createElement("div");
             card.className = "video-card";
             card.innerHTML = `
-              <img src="${thumbnail}" />
+              <img src="${thumbnail}">
               <p>${title}</p>
               <button class="play-btn" onclick="playAudio(${index})">Play</button>
               <button class="fav-btn" onclick="addToFavorites('${videoId}', '${title.replace(/'/g, "\\'")}')">Favorite</button>
@@ -160,7 +197,7 @@
       const song = currentList[index];
       const videoId = song.id.videoId;
       const title = song.snippet.title;
-      const thumb = song.snippet.thumbnails.medium.url;
+      const thumbnail = song.snippet.thumbnails.medium.url;
       currentSongIndex = index;
 
       if (currentFrame) currentFrame.remove();
@@ -173,11 +210,23 @@
       currentFrame.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&controls=0&rel=0`;
       document.body.appendChild(currentFrame);
 
-      playerThumbnail.src = thumb;
+      playerThumbnail.src = thumbnail;
       playerTitle.textContent = title;
-      musicPlayer.style.display = "block";
+      playerBar.style.display = "block";
+
       favBtn.onclick = () => addToFavorites(videoId, title);
       simulateProgress();
+    }
+
+    function simulateProgress() {
+      progressBar.style.width = "0%";
+      let progress = 0;
+      clearInterval(window.progressTimer);
+      window.progressTimer = setInterval(() => {
+        progress += 1;
+        if (progress >= 100) clearInterval(window.progressTimer);
+        progressBar.style.width = progress + "%";
+      }, 1000);
     }
 
     function addToFavorites(videoId, title) {
@@ -185,35 +234,37 @@
       if (!favorites.find(f => f.id === videoId)) {
         favorites.push({ id: videoId, title });
         localStorage.setItem("favorites", JSON.stringify(favorites));
-        alert("Added to Favorites");
+        loadFavorites();
       }
+    }
+
+    function loadFavorites() {
+      favList.innerHTML = '';
+      const favorites = JSON.parse(localStorage.getItem("favorites")) || [];
+      favorites.forEach(fav => {
+        favList.innerHTML += `<a href="#" onclick="playById('${fav.id}', '${fav.title}')">${fav.title}</a>`;
+      });
+    }
+
+    function playById(videoId, title) {
+      const item = { id: { videoId }, snippet: { title, thumbnails: { medium: { url: "https://img.youtube.com/vi/" + videoId + "/mqdefault.jpg" } } } };
+      currentList = [item];
+      playAudio(0);
     }
 
     function nextSong() {
-      if (currentSongIndex + 1 < currentList.length) {
-        playAudio(currentSongIndex + 1);
-      }
+      if (currentSongIndex + 1 < currentList.length) playAudio(currentSongIndex + 1);
     }
 
     function prevSong() {
-      if (currentSongIndex > 0) {
-        playAudio(currentSongIndex - 1);
-      }
+      if (currentSongIndex > 0) playAudio(currentSongIndex - 1);
     }
 
     pausePlayBtn.onclick = () => {
-      alert("Pause/Resume not supported on YouTube embed (mobile restriction)");
+      alert("Pause/Resume not supported on YouTube embeds due to mobile restrictions.");
     };
 
-    function simulateProgress() {
-      progressBar.style.width = "0%";
-      let progress = 0;
-      const timer = setInterval(() => {
-        progress += 1;
-        if (progress >= 100) clearInterval(timer);
-        progressBar.style.width = progress + "%";
-      }, 1000);
-    }
+    window.onload = loadFavorites;
   </script>
 </body>
 </html>
