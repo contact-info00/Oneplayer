@@ -1,76 +1,132 @@
-<script>
-  const API_KEY = "AIzaSyAiZDuUwQMfUaP7ToFZfIdNrRRTwIqcfi0";
-  const searchInput = document.getElementById('search-input');
-  const resultsDiv = document.getElementById('results');
-  const favList = document.getElementById('fav-list');
-
-  let currentAudioFrame = null;
-
-  searchInput.addEventListener('keypress', function (e) {
-    if (e.key === 'Enter') {
-      searchYouTube(searchInput.value);
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>YouTube Audio Player</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: #fff;
+      padding: 20px;
+      text-align: center;
     }
-  });
-
-  window.onload = () => loadFavorites();
-
-  function searchYouTube(query) {
-    fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=20&q=${encodeURIComponent(query)}&key=${API_KEY}`)
-      .then(res => res.json())
-      .then(data => {
-        resultsDiv.innerHTML = '';
-        data.items.forEach(item => {
-          const videoId = item.id.videoId;
-          const title = item.snippet.title;
-          const thumbnail = item.snippet.thumbnails.medium.url;
-
-          const card = document.createElement('div');
-          card.className = 'video-card';
-          card.innerHTML = `
-            <img src="${thumbnail}" alt="${title}">
-            <p>${title}</p>
-            <button onclick="playAudio('${videoId}')">Play</button>
-            <button onclick="addToFavorites('${videoId}', '${title.replace(/'/g, "\\'")}')">Favorite</button>
-          `;
-          resultsDiv.appendChild(card);
-        });
-      });
-  }
-
-  function playAudio(videoId) {
-    // Remove previous iframe if exists
-    if (currentAudioFrame) {
-      currentAudioFrame.remove();
+    #search-input {
+      width: 80%;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: none;
     }
-
-    // Create hidden iframe to simulate audio playback
-    currentAudioFrame = document.createElement('iframe');
-    currentAudioFrame.style.width = "1px";
-    currentAudioFrame.style.height = "1px";
-    currentAudioFrame.style.position = "absolute";
-    currentAudioFrame.style.left = "-9999px";
-    currentAudioFrame.setAttribute("allow", "autoplay");
-    currentAudioFrame.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&controls=0&rel=0&modestbranding=1`;
-
-    document.body.appendChild(currentAudioFrame);
-  }
-
-  function addToFavorites(videoId, title) {
-    let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
-    if (!favorites.find(f => f.id === videoId)) {
-      favorites.push({ id: videoId, title });
-      localStorage.setItem('favorites', JSON.stringify(favorites));
-      loadFavorites();
+    #results {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 20px;
     }
-  }
+    .video-card {
+      background: #222;
+      padding: 10px;
+      width: 180px;
+      border-radius: 8px;
+    }
+    .video-card img {
+      width: 100%;
+      border-radius: 6px;
+    }
+    .video-card button {
+      margin-top: 5px;
+      padding: 5px 8px;
+      font-size: 13px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .play-btn { background: #00b894; color: #fff; }
+    .fav-btn { background: #0984e3; color: #fff; }
+    #fav-list a {
+      display: block;
+      margin: 5px 0;
+      color: #74b9ff;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <h2>YouTube Audio Player</h2>
+  <input type="text" id="search-input" placeholder="Search music..." />
 
-  function loadFavorites() {
-    favList.innerHTML = '';
-    const favorites = JSON.parse(localStorage.getItem('favorites')) || [];
-    favorites.forEach(fav => {
-      const li = document.createElement('li');
-      li.innerHTML = `<a href="#" onclick="playAudio('${fav.id}')">${fav.title}</a>`;
-      favList.appendChild(li);
+  <div id="results"></div>
+
+  <h3>Your Favorites</h3>
+  <div id="fav-list"></div>
+
+  <script>
+    const API_KEY = "AIzaSyAiZDuUwQMfUaP7ToFZfIdNrRRTwIqcfi0";
+    const searchInput = document.getElementById('search-input');
+    const resultsDiv = document.getElementById('results');
+    const favList = document.getElementById('fav-list');
+    let currentFrame = null;
+
+    searchInput.addEventListener('keypress', e => {
+      if (e.key === 'Enter') searchYouTube(searchInput.value);
     });
-  }
-</script>
+
+    function searchYouTube(query) {
+      fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=20&q=${encodeURIComponent(query)}&key=${API_KEY}`)
+        .then(res => res.json())
+        .then(data => {
+          resultsDiv.innerHTML = '';
+          data.items.forEach(item => {
+            const videoId = item.id.videoId;
+            const title = item.snippet.title;
+            const thumbnail = item.snippet.thumbnails.medium.url;
+
+            const card = document.createElement('div');
+            card.className = 'video-card';
+            card.innerHTML = `
+              <img src="${thumbnail}" />
+              <p>${title}</p>
+              <button class="play-btn" onclick="playAudio('${videoId}')">Play</button>
+              <button class="fav-btn" onclick="addToFavorites('${videoId}', '${title.replace(/'/g, "\\'")}')">Favorite</button>
+            `;
+            resultsDiv.appendChild(card);
+          });
+        });
+    }
+
+    function playAudio(videoId) {
+      if (currentFrame) currentFrame.remove();
+      currentFrame = document.createElement('iframe');
+      currentFrame.style.width = "1px";
+      currentFrame.style.height = "1px";
+      currentFrame.style.position = "absolute";
+      currentFrame.style.left = "-9999px";
+      currentFrame.setAttribute("allow", "autoplay");
+      currentFrame.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&controls=0&rel=0`;
+      document.body.appendChild(currentFrame);
+    }
+
+    function addToFavorites(videoId, title) {
+      let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+      if (!favorites.find(f => f.id === videoId)) {
+        favorites.push({ id: videoId, title });
+        localStorage.setItem('favorites', JSON.stringify(favorites));
+        loadFavorites();
+      }
+    }
+
+    function loadFavorites() {
+      favList.innerHTML = '';
+      const favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+      favorites.forEach(fav => {
+        favList.innerHTML += `<a href="#" onclick="playAudio('${fav.id}')">${fav.title}</a>`;
+      });
+    }
+
+    window.onload = loadFavorites;
+  </script>
+</body>
+</html>
