@@ -3,50 +3,91 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Oneplayer</title>
+  <title>Clean Music Search</title>
   <style>
     body {
-      background-color: #1e130c;
-      background-image: linear-gradient(315deg, #1e130c 0%, #9a8478 74%);
-      font-family: sans-serif;
-      text-align: center;
-      padding: 20px;
+      margin: 0;
+      background: linear-gradient(135deg, #2193b0, #6dd5ed);
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 10px;
       color: #fff;
+    }
+
+    .search-container {
+      display: flex;
+      width: 90%;
+      max-width: 500px;
+      background: white;
+      border-radius: 50px;
+      overflow: hidden;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     }
 
     .search-bar {
-      background: #4e3c2a;
-      border-radius: 30px;
-      padding: 12px 20px;
-      width: 80%;
-      font-size: 18px;
+      flex: 1;
       border: none;
-      color: #fff;
-      margin-bottom: 20px;
+      padding: 15px 20px;
+      font-size: 18px;
+      outline: none;
+      border-radius: 50px 0 0 50px;
+    }
+
+    .search-btn {
+      background: #0078D7;
+      border: none;
+      color: white;
+      padding: 0 20px;
+      cursor: pointer;
+      font-size: 20px;
+      border-radius: 0 50px 50px 0;
+    }
+
+    .suggestions {
+      background: white;
+      color: black;
+      width: 90%;
+      max-width: 500px;
+      border-radius: 0 0 10px 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      margin-top: -10px;
+      position: relative;
+      z-index: 5;
+    }
+
+    .suggestions div {
+      padding: 10px 20px;
+      cursor: pointer;
+    }
+
+    .suggestions div:hover {
+      background: #f0f0f0;
     }
 
     .result-card {
-      background: rgba(255, 255, 255, 0.08);
-      margin: 12px auto;
+      background: rgba(255, 255, 255, 0.2);
+      margin: 15px auto;
       padding: 10px;
       border-radius: 15px;
       width: 90%;
-      max-width: 400px;
+      max-width: 500px;
       display: flex;
       align-items: center;
-      box-shadow: 0 0 10px #000;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
       cursor: pointer;
       transition: 0.3s;
     }
 
     .result-card:hover {
-      background: rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.35);
     }
 
     .result-thumbnail {
-      width: 80px;
-      height: 80px;
-      border-radius: 12px;
+      width: 70px;
+      height: 70px;
+      border-radius: 10px;
       object-fit: cover;
       margin-right: 15px;
     }
@@ -54,17 +95,17 @@
     .result-info {
       text-align: left;
       flex-grow: 1;
+      color: white;
     }
 
     .result-title {
       font-size: 16px;
       font-weight: bold;
-      color: #fff;
     }
 
     .result-channel {
       font-size: 14px;
-      color: #ccc;
+      color: #ddd;
     }
 
     iframe {
@@ -77,19 +118,55 @@
 </head>
 <body>
 
-  <input type="text" id="searchQuery" class="search-bar" placeholder="Search a song..." onkeydown="if(event.key==='Enter'){searchMusic()}"/>
-  <div id="resultsContainer"></div>
+  <div class="search-container">
+    <input type="text" id="searchQuery" class="search-bar" placeholder="Search..." oninput="showSuggestions()" onkeydown="handleKey(event)">
+    <button class="search-btn" onclick="searchMusic()">&#128269;</button>
+  </div>
+  <div id="suggestions" class="suggestions"></div>
 
+  <div id="resultsContainer"></div>
   <iframe id="ytPlayer" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 
   <script>
     const apiKey = 'AIzaSyAiZDuUwQMfUaP7ToFZfIdNrRRTwIqcfi0';
 
+    function handleKey(event) {
+      if (event.key === 'Enter') {
+        document.getElementById("suggestions").innerHTML = "";
+        searchMusic();
+      }
+    }
+
+    function showSuggestions() {
+      const query = document.getElementById('searchQuery').value;
+      if (!query) {
+        document.getElementById('suggestions').innerHTML = '';
+        return;
+      }
+
+      fetch(`https://suggestqueries.google.com/complete/search?client=firefox&ds=yt&q=${encodeURIComponent(query)}`)
+        .then(response => response.json())
+        .then(data => {
+          const suggestionsBox = document.getElementById('suggestions');
+          suggestionsBox.innerHTML = '';
+          data[1].forEach(item => {
+            const div = document.createElement('div');
+            div.textContent = item;
+            div.onclick = () => {
+              document.getElementById('searchQuery').value = item;
+              suggestionsBox.innerHTML = '';
+              searchMusic();
+            };
+            suggestionsBox.appendChild(div);
+          });
+        });
+    }
+
     async function searchMusic() {
       const query = document.getElementById('searchQuery').value;
       if (!query) return alert("Please type a song name");
 
-      const response = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&q=${encodeURIComponent(query)}&key=${apiKey}&maxResults=5`);
+      const response = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&q=${encodeURIComponent(query)}&key=${apiKey}&maxResults=20`);
       const data = await response.json();
       const resultsContainer = document.getElementById('resultsContainer');
       resultsContainer.innerHTML = '';
