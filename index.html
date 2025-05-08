@@ -1,81 +1,71 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>YouTube Music Player</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>YouTube Audio Player</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      margin: 0;
+      background: #f0f0f0;
       padding: 20px;
-      background: #f9f9f9;
-    }
-    h1 {
       text-align: center;
     }
     #search-container {
-      display: flex;
-      justify-content: center;
       margin-bottom: 20px;
     }
     #search-input {
-      width: 70%;
+      width: 80%;
       padding: 10px;
       font-size: 16px;
     }
     #results {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
       justify-content: center;
+      gap: 15px;
     }
     .video-card {
-      width: 200px;
       background: #fff;
-      border-radius: 6px;
+      padding: 10px;
+      width: 200px;
+      border-radius: 8px;
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      cursor: pointer;
-      overflow: hidden;
+      text-align: center;
     }
     .video-card img {
       width: 100%;
+      border-radius: 5px;
     }
-    .video-card h4 {
+    .video-card button {
+      margin-top: 5px;
+      padding: 5px 10px;
       font-size: 14px;
-      margin: 5px;
-    }
-    #player {
-      margin-top: 20px;
-      text-align: center;
     }
     #favorites {
       margin-top: 30px;
     }
-    .fav-btn {
-      background: green;
-      color: white;
-      border: none;
-      padding: 5px 8px;
-      margin: 5px;
-      cursor: pointer;
-      font-size: 12px;
+    #hidden-player {
+      width: 0;
+      height: 0;
+      border: 0;
+      position: absolute;
+      left: -9999px;
     }
   </style>
 </head>
 <body>
-  <h1>YouTube Music Player</h1>
-
+  <h2>YouTube Audio Player</h2>
   <div id="search-container">
     <input type="text" id="search-input" placeholder="Search music...">
   </div>
 
   <div id="results"></div>
 
-  <div id="player"></div>
+  <iframe id="hidden-player" allow="autoplay" allowfullscreen></iframe>
 
   <div id="favorites">
-    <h2>Your Favorites</h2>
+    <h3>Favorites</h3>
     <ul id="fav-list"></ul>
   </div>
 
@@ -83,17 +73,15 @@
     const API_KEY = "AIzaSyAiZDuUwQMfUaP7ToFZfIdNrRRTwIqcfi0";
     const searchInput = document.getElementById('search-input');
     const resultsDiv = document.getElementById('results');
-    const playerDiv = document.getElementById('player');
+    const hiddenPlayer = document.getElementById('hidden-player');
     const favList = document.getElementById('fav-list');
 
-    // Search trigger
-    searchInput.addEventListener('keypress', function(e) {
+    searchInput.addEventListener('keypress', function (e) {
       if (e.key === 'Enter') {
         searchYouTube(searchInput.value);
       }
     });
 
-    // Load favorites on startup
     window.onload = () => loadFavorites();
 
     function searchYouTube(query) {
@@ -109,20 +97,18 @@
             const card = document.createElement('div');
             card.className = 'video-card';
             card.innerHTML = `
-              <img src="${thumbnail}">
-              <h4>${title}</h4>
-              <button class="fav-btn" onclick="addToFavorites('${videoId}', '${title.replace(/'/g, "\\'")}')">Add to Favorites</button>
+              <img src="${thumbnail}" alt="${title}">
+              <p>${title}</p>
+              <button onclick="playAudio('${videoId}')">Play</button>
+              <button onclick="addToFavorites('${videoId}', '${title.replace(/'/g, "\\'")}')">Favorite</button>
             `;
-            card.onclick = () => playVideo(videoId);
             resultsDiv.appendChild(card);
           });
         });
     }
 
-    function playVideo(videoId) {
-      playerDiv.innerHTML = `
-        <iframe width="360" height="215" src="https://www.youtube.com/embed/${videoId}?autoplay=1" frameborder="0" allowfullscreen></iframe>
-      `;
+    function playAudio(videoId) {
+      hiddenPlayer.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&controls=0&modestbranding=1&rel=0`;
     }
 
     function addToFavorites(videoId, title) {
@@ -139,9 +125,7 @@
       const favorites = JSON.parse(localStorage.getItem('favorites')) || [];
       favorites.forEach(fav => {
         const li = document.createElement('li');
-        li.innerHTML = `
-          <a href="https://www.youtube.com/watch?v=${fav.id}" target="_blank">${fav.title}</a>
-        `;
+        li.innerHTML = `<a href="#" onclick="playAudio('${fav.id}')">${fav.title}</a>`;
         favList.appendChild(li);
       });
     }
