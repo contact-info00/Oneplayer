@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -8,149 +8,131 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
         integrity="sha512-VzLeYXja45Y0E1RqKxgGx6oCuVuRIsY6tyhZp3q7bV+XbKh0K4oqxD33I9gKx9m1G7n1prbP+0DzT/2hZj5PZA=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <!-- Tailwind via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#5D5CDE',
+            secondary: '#FFD700',
+          }
+        }
+      }
+    }
+  </script>
   <style>
-    /* Reset & Base */
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: sans-serif; background: #121212; color: #fff; height: 100vh;
-           display: flex; flex-direction: column; }
-    a { color: inherit; text-decoration: none; }
-
-    /* Header */
-    header { display: flex; align-items: center; justify-content: space-between;
-             padding: 10px; }
-    header h1 { font-size: 1.2rem; }
-    header button { background: none; border: none; color: #fff; font-size: 1.4rem; }
-
-    /* Views */
-    section { display: none; flex: 1; overflow: auto; padding: 0 10px; }
-    section.active { display: flex; flex-direction: column; }
-
-    /* Search */
-    #searchBar { display: flex; margin: 10px 0; }
-    #searchInput {
-      flex: 1; padding: 8px 12px; border: none; border-radius: 20px 0 0 20px;
-      font-size: 1rem;
+    /* slider/progress styling */
+    .progress-bar {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%; height: 4px;
+      background: rgba(255,255,255,0.3);
+      border-radius: 5px; outline: none;
     }
-    #searchBtn {
-      background: #1db954; border: none; padding: 0 15px; border-radius: 0 20px 20px 0;
-      font-size: 1.2rem; color: #fff;
+    .progress-bar::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 12px; height: 12px;
+      background: white;
+      border-radius: 50%; cursor: pointer;
     }
-
-    #results, #favoritesList {
-      flex: 1; overflow-y: auto; margin-bottom: 80px;
-    }
-    .item {
-      display: flex; align-items: center; margin: 8px 0;
-      background: #1e1e1e; border-radius: 8px; padding: 6px;
-    }
-    .item img { width: 60px; height: 60px; border-radius: 4px; }
-    .info { flex: 1; margin-left: 10px; font-size: 0.9rem; }
-    .info p { margin-bottom: 4px; }
-    .info .title { font-weight: bold; }
-    .info .channel { color: #bbb; font-size: 0.8rem; }
-
-    .btn {
-      background: none; border: none; color: #1db954; font-size: 1.4rem;
-      margin-left: 8px; cursor: pointer;
-    }
-
-    /* Player Footer */
-    #playerUI {
-      position: fixed; bottom: 0; left: 0; right: 0;
-      background: #181818; padding: 10px;
-      display: flex; flex-direction: column; align-items: center;
-      border-top: 1px solid #333;
-    }
-    #playerUI.hidden { display: none; }
-
-    #nowPlaying {
-      display: flex; align-items: center; width: 100%;
-    }
-    #nowPlaying img {
-      width: 50px; height: 50px; border-radius: 4px;
-    }
-    #trackInfo { flex: 1; margin-left: 10px; font-size: 0.9rem; }
-    #trackInfo .title { font-weight: bold; }
-
-    #controls {
-      margin: 8px 0;
-      display: flex; align-items: center; justify-content: center;
-    }
-    #controls button {
-      background: none; border: none; color: #fff; font-size: 1.6rem;
-      margin: 0 15px; cursor: pointer;
-    }
-    #progress {
-      width: 100%; margin: 5px 0;
-    }
-    #volume {
-      width: 80%; margin-top: 5px;
-    }
-
-    /* Hide YouTube iframe */
-    #playerFrame { display: none; }
+    /* button/tabs styling */
+    .tab-active  { border-bottom: 2px solid white; font-weight: bold; }
+    .toggle-btn  { border-radius: 20px; padding: 8px 20px;
+                   background-color: rgba(40,40,40,0.8);
+                   color: white; border: none; outline: none;
+                   cursor: pointer; }
+    .toggle-btn.active { background-color: rgba(60,60,60,1); font-weight: 600; }
+    /* light mode overrides */
+    .light { background: #FFFFFF; color: #181818; }
+    .light .toggle-btn { background-color: #e0e0e0; color: #181818; }
+    .light .toggle-btn.active { background-color: #c0c0c0; }
+    .light .progress-bar { background: rgba(0,0,0,0.2); }
+    .light .progress-bar::-webkit-slider-thumb { background: #181818; }
+    .light .tab-active { border-bottom: 2px solid #181818; }
   </style>
 </head>
-<body>
-  <!-- Header with routing buttons -->
-  <header>
-    <button id="homeBtn"><i class="fa fa-music"></i></button>
-    <h1>My Player</h1>
-    <button id="favBtn"><i class="fa fa-heart"></i></button>
+<body class="flex flex-col h-screen bg-gray-900 text-white">
+  <!-- Header -->
+  <header class="flex items-center justify-between p-3">
+    <button id="homeBtn" class="text-xl"><i class="fa fa-music"></i></button>
+    <h1 class="text-lg font-semibold">My Player</h1>
+    <button id="favBtn" class="text-xl"><i class="fa fa-heart"></i></button>
   </header>
 
-  <!-- Search/Results View -->
-  <section id="home" class="active">
-    <div id="searchBar">
-      <input type="text" id="searchInput" placeholder="Search for music…" />
-      <button id="searchBtn"><i class="fa fa-search"></i></button>
+  <!-- Home (Search) -->
+  <section id="home" class="flex-1 flex flex-col px-4 overflow-auto">
+    <div class="flex my-2">
+      <input id="searchInput"
+             class="flex-1 px-3 py-2 rounded-l-full bg-gray-800 text-white outline-none"
+             type="text" placeholder="Search for music…"/>
+      <button id="searchBtn"
+              class="px-4 rounded-r-full bg-primary text-white">
+        <i class="fa fa-search"></i>
+      </button>
     </div>
-    <div id="results"></div>
+    <div id="results" class="flex-1 overflow-y-auto space-y-2"></div>
   </section>
 
-  <!-- Favorites View -->
-  <section id="favorites">
-    <h2>Your Favorites</h2>
-    <div id="favoritesList"></div>
+  <!-- Favorites -->
+  <section id="favorites" class="hidden flex-1 flex-col px-4 overflow-auto">
+    <h2 class="text-xl font-semibold mb-2">Your Favorites</h2>
+    <div id="favoritesList" class="flex-1 overflow-y-auto space-y-2"></div>
   </section>
 
   <!-- Player UI -->
-  <div id="playerUI" class="hidden">
-    <div id="nowPlaying">
-      <img id="npThumb" src="" alt="Album Art" />
-      <div id="trackInfo">
-        <div class="title" id="npTitle"></div>
-        <div class="channel" id="npChannel"></div>
+  <div id="playerUI"
+       class="hidden fixed bottom-0 left-0 right-0 bg-gray-800 p-3 border-t border-gray-700">
+    <div id="nowPlaying" class="flex items-center">
+      <img id="npThumb" src="" alt="" class="w-12 h-12 rounded"/>
+      <div class="ml-3 flex-1">
+        <div id="npTitle" class="font-bold text-sm"></div>
+        <div id="npChannel" class="text-xs text-gray-400"></div>
       </div>
-      <button id="toggleFav" class="btn"><i class="fa fa-heart"></i></button>
+      <button id="toggleFav" class="toggle-btn"><i class="fa fa-heart"></i></button>
     </div>
-    <div id="controls">
-      <button id="prev"><i class="fa fa-backward"></i></button>
-      <button id="playPause"><i class="fa fa-play"></i></button>
-      <button id="next"><i class="fa fa-forward"></i></button>
+    <div class="flex items-center justify-center my-2 space-x-6">
+      <button id="prev" class="text-2xl"><i class="fa fa-backward"></i></button>
+      <button id="playPause" class="text-2xl"><i class="fa fa-play"></i></button>
+      <button id="next" class="text-2xl"><i class="fa fa-forward"></i></button>
     </div>
-    <input type="range" id="progress" min="0" max="100" value="0" />
-    <input type="range" id="volume" min="0" max="100" value="100" />
+    <input id="progress" type="range" min="0" max="100" value="0"
+           class="w-full progress-bar"/>
+    <input id="volume" type="range" min="0" max="100" value="100"
+           class="w-4/5 mt-2 progress-bar"/>
   </div>
 
-  <!-- YouTube Player (hidden) -->
+  <!-- Hidden YouTube iframe -->
   <div id="playerFrame"></div>
   <script src="https://www.youtube.com/iframe_api"></script>
   <script>
-    // --- CONFIGURE YOUR KEY HERE ---
+    // your real key here:
     const API_KEY = 'AIzaSyAiZDuUwQMfUaP7ToFZfIdNrRRTwIqcfi0';
 
-    // --- STATE ---
+    // match-system-dark-mode
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      document.documentElement.classList.add('dark');
+    }
+    window.matchMedia('(prefers-color-scheme: dark)')
+      .addEventListener('change', e => {
+        e.matches
+          ? document.documentElement.classList.add('dark')
+          : document.documentElement.classList.remove('dark');
+      });
+
+    // state & DOM refs
     let player, playlist = [], currentIndex = 0;
     let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
 
-    // --- DOM REFS ---
-    const homeSec = document.getElementById('home'),
-          favSec  = document.getElementById('favorites'),
-          homeBtn = document.getElementById('homeBtn'),
-          favBtn  = document.getElementById('favBtn'),
-          results = document.getElementById('results'),
-          favList = document.getElementById('favoritesList'),
+    const homeSec  = document.getElementById('home'),
+          favSec   = document.getElementById('favorites'),
+          homeBtn  = document.getElementById('homeBtn'),
+          favBtn   = document.getElementById('favBtn'),
+          results  = document.getElementById('results'),
+          favList  = document.getElementById('favoritesList'),
           searchInput = document.getElementById('searchInput'),
           searchBtn   = document.getElementById('searchBtn'),
           playerUI    = document.getElementById('playerUI'),
@@ -164,55 +146,59 @@
           progress    = document.getElementById('progress'),
           volume      = document.getElementById('volume');
 
-    // -- ROUTING -->
-    homeBtn.onclick = ()=>showView('home');
-    favBtn.onclick  = ()=>{ showView('favorites'); renderFavorites(); };
-
+    // view routing
+    homeBtn.onclick = () => showView('home');
+    favBtn.onclick  = () => {
+      showView('favorites');
+      renderFavorites();
+    };
     function showView(id) {
-      [homeSec, favSec].forEach(s=>s.id===id? s.classList.add('active'): s.classList.remove('active'));
+      homeSec.classList.toggle('hidden', id!=='home');
+      favSec.classList.toggle('hidden', id!=='favorites');
     }
 
-    // --- YouTube IFrame API setup ---
+    // YouTube IFrame API
     function onYouTubeIframeAPIReady() {
       player = new YT.Player('playerFrame', {
         height: '0', width: '0', videoId: '',
         playerVars: { 'playsinline': 1, 'controls': 0 },
-        events: {
-          'onStateChange': onPlayerStateChange
-        }
+        events: { 'onStateChange': onPlayerStateChange }
       });
     }
 
-    // --- SEARCH FUNCTION ---
+    // search
     searchBtn.onclick = async () => {
       let q = searchInput.value.trim();
       if (!q) return;
       results.innerHTML = '<p>Searching…</p>';
-      const res = await fetch(
-        `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=10&q=${encodeURIComponent(q)}&key=${API_KEY}`
-      );
+      const url = `https://www.googleapis.com/youtube/v3/search`
+                + `?part=snippet&type=video&maxResults=10`
+                + `&q=${encodeURIComponent(q)}`
+                + `&key=${API_KEY}`;
+      const res = await fetch(url);
       const data = await res.json();
       playlist = data.items;
       currentIndex = -1;
       results.innerHTML = '';
-      data.items.forEach((it,i)=> {
+      data.items.forEach((it,i) => {
         const div = document.createElement('div');
-        div.className = 'item';
+        div.className = 'flex items-center bg-gray-800 rounded-lg p-3 space-x-3';
         div.innerHTML = `
-          <img src="${it.snippet.thumbnails.default.url}" alt="">
-          <div class="info">
-            <p class="title">${it.snippet.title}</p>
-            <p class="channel">${it.snippet.channelTitle}</p>
+          <img src="${it.snippet.thumbnails.medium.url}" class="w-14 h-14 rounded"/>
+          <div class="flex-1">
+            <p class="font-medium text-sm">${it.snippet.title}</p>
+            <p class="text-xs text-gray-400">${it.snippet.channelTitle}</p>
           </div>
-          <button class="btn playBtn" data-index="${i}"><i class="fa fa-play"></i></button>
-          <button class="btn favBtn" data-id="${it.id.videoId}"
+          <button class="text-xl playBtn" data-index="${i}">
+            <i class="fa fa-play"></i>
+          </button>
+          <button class="text-xl favBtn" data-id="${it.id.videoId}"
                   data-title="${it.snippet.title}"
-                  data-thumb="${it.snippet.thumbnails.default.url}">
-            <i class="fa fa-heart${favorites.find(f=>f.id===it.id.videoId)?'':'-o'}"></i>
+                  data-thumb="${it.snippet.thumbnails.medium.url}">
+            <i class="fa ${favorites.find(f=>f.id===it.id.videoId)?'fa-heart':'fa-heart-o'}"></i>
           </button>`;
         results.appendChild(div);
       });
-      // bind result play/fav buttons
       document.querySelectorAll('.playBtn').forEach(b=>
         b.onclick = () => playIndex(+b.dataset.index)
       );
@@ -221,7 +207,7 @@
       );
     };
 
-    // --- PLAYBACK CONTROLS ---
+    // playback
     function playIndex(i) {
       currentIndex = i;
       let vid = playlist[i].id.videoId;
@@ -239,83 +225,70 @@
     }
     playPause.onclick = () => {
       let s = player.getPlayerState();
-      if (s===YT.PlayerState.PLAYING) player.pauseVideo();
-      else player.playVideo();
+      s===YT.PlayerState.PLAYING ? player.pauseVideo() : player.playVideo();
     };
-    prevBtn.onclick = ()=> {
-      if (currentIndex>0) playIndex(currentIndex-1);
-    };
-    nextBtn.onclick = ()=> {
-      if (currentIndex<playlist.length-1) playIndex(currentIndex+1);
-    };
-    progress.oninput = ()=> {
-      if (!player.getDuration) return;
+    prevBtn.onclick = ()=> currentIndex>0 && playIndex(currentIndex-1);
+    nextBtn.onclick = ()=> currentIndex<playlist.length-1 && playIndex(currentIndex+1);
+
+    progress.oninput = ()=>{
       let d = player.getDuration();
-      player.seekTo(d * (progress.value/100), true);
+      player.seekTo(d*(progress.value/100), true);
     };
-    function updateProgress() {
-      if (!player.getCurrentTime) return;
-      let c = player.getCurrentTime(),
-          d = player.getDuration();
+    function updateProgress(){
+      let c = player.getCurrentTime(), d = player.getDuration();
       progress.value = (c/d)*100;
       requestAnimationFrame(updateProgress);
     }
     volume.oninput = ()=> player.setVolume(volume.value);
 
-    // --- NOW PLAYING UI ---
-    function updateNowPlaying(item) {
-      npThumb.src     = item.snippet.thumbnails.default.url;
-      npTitle.textContent   = item.snippet.title;
+    // now-playing UI
+    function updateNowPlaying(item){
+      npThumb.src = item.snippet.thumbnails.medium.url;
+      npTitle.textContent = item.snippet.title;
       npChannel.textContent = item.snippet.channelTitle;
-      toggleFav.innerHTML = `<i class="fa fa-heart${favorites.find(f=>f.id===item.id.videoId)?'':'-o'}"></i>`;
+      toggleFav.innerHTML = `<i class="fa ${favorites.find(f=>f.id===item.id.videoId)?'fa-heart':'fa-heart-o'}"></i>`;
       toggleFav.dataset.id    = item.id.videoId;
       toggleFav.dataset.title = item.snippet.title;
-      toggleFav.dataset.thumb = item.snippet.thumbnails.default.url;
+      toggleFav.dataset.thumb = item.snippet.thumbnails.medium.url;
     }
     toggleFav.onclick = ()=> toggleFavorite(toggleFav);
 
-    // --- FAVORITES ---
-    function toggleFavorite(btn) {
-      let id    = btn.dataset.id,
+    // favorites
+    function toggleFavorite(btn){
+      let id = btn.dataset.id,
           title = btn.dataset.title,
           thumb = btn.dataset.thumb;
       let idx = favorites.findIndex(f=>f.id===id);
-      if (idx>=0) {
-        favorites.splice(idx,1);
-      } else {
-        favorites.push({ id, title, thumb });
-      }
+      if(idx>=0) favorites.splice(idx,1);
+      else favorites.push({id,title,thumb});
       localStorage.setItem('favorites', JSON.stringify(favorites));
-      // update UI icons
+      // update all icons
       document.querySelectorAll(`button[data-id="${id}"] i`).forEach(i=>{
         i.className = favorites.find(f=>f.id===id)?'fa fa-heart':'fa fa-heart-o';
       });
-      updateNowPlaying(playlist[currentIndex]||{id:{videoId:null}});
     }
-
-    function renderFavorites() {
+    function renderFavorites(){
       favList.innerHTML = favorites.length
         ? ''
         : '<p>No favorites yet.</p>';
-      favorites.forEach((f,i)=>{
+      favorites.forEach(f=>{
         const div = document.createElement('div');
-        div.className = 'item';
+        div.className = 'flex items-center bg-gray-800 rounded-lg p-3 space-x-3';
         div.innerHTML = `
-          <img src="${f.thumb}" alt="">
-          <div class="info">
-            <p class="title">${f.title}</p>
+          <img src="${f.thumb}" class="w-14 h-14 rounded"/>
+          <div class="flex-1">
+            <p class="font-medium text-sm">${f.title}</p>
           </div>
-          <button class="btn playBtnFav" data-id="${f.id}" data-index="${i}">
+          <button class="text-xl playFav" data-id="${f.id}">
             <i class="fa fa-play"></i>
           </button>
-          <button class="btn removeFav" data-id="${f.id}">
+          <button class="text-xl removeFav" data-id="${f.id}">
             <i class="fa fa-trash"></i>
           </button>`;
         favList.appendChild(div);
       });
-      document.querySelectorAll('.playBtnFav').forEach(b=>
+      document.querySelectorAll('.playFav').forEach(b=>
         b.onclick = ()=> {
-          // find in playlist or just load by id
           player.loadVideoById(b.dataset.id);
           playerUI.classList.remove('hidden');
         }
@@ -328,8 +301,6 @@
         }
       );
     }
-
-    // Keep playing when you switch between our “views”
   </script>
 </body>
 </html>
