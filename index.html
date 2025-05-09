@@ -1,11 +1,335 @@
-Music Player tailwind.config = { darkMode: 'class', theme: { extend: { colors: { primary: '#5D5CDE', secondary: '#FFD700' } } } } .progress-bar { -webkit-appearance: none; appearance: none; width: 100%; height: 4px; background: rgba(255, 255, 255, 0.3); border-radius: 5px; outline: none; } .progress-bar::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 12px; height: 12px; background: white; border-radius: 50%; cursor: pointer; } .tab-active { border-bottom: 2px solid white; font-weight: bold; } .toggle-btn { border-radius: 20px; padding: 8px 20px; background-color: rgba(40, 40, 40, 0.8); color: white; border: none; outline: none; cursor: pointer; } .toggle-btn.active { background-color: rgba(60, 60, 60, 1); font-weight: 600; } .dark { background-color: #181818; color: white; } .light { background-color: #FFFFFF; color: #181818; } .light .toggle-btn { background-color: #e0e0e0; color: #181818; } .light .toggle-btn.active { background-color: #c0c0c0; } .light .progress-bar { background: rgba(0, 0, 0, 0.2); } .light .progress-bar::-webkit-slider-thumb { background: #181818; } .light .tab-active { border-bottom: 2px solid #181818; } if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) { document.documentElement.classList.add('dark'); } window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => { if (event.matches) { document.documentElement.classList.add('dark'); } else { document.documentElement.classList.remove('dark'); } }); 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mobile Music Player</title>
+  <!-- Font Awesome for Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        integrity="sha512-VzLeYXja45Y0E1RqKxgGx6oCuVuRIsY6tyhZp3q7bV+XbKh0K4oqxD33I9gKx9m1G7n1prbP+0DzT/2hZj5PZA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    /* Reset & Base */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; background: #121212; color: #fff; height: 100vh;
+           display: flex; flex-direction: column; }
+    a { color: inherit; text-decoration: none; }
 
-Song Video 
+    /* Header */
+    header { display: flex; align-items: center; justify-content: space-between;
+             padding: 10px; }
+    header h1 { font-size: 1.2rem; }
+    header button { background: none; border: none; color: #fff; font-size: 1.4rem; }
 
-const API_KEY = "AIzaSyAiZDuUwQMfUaP7ToFZfIdNrRRTwIqcfi0"; document.getElementById("search-box").addEventListener("keypress", function(e) { if (e.key === "Enter") { searchYouTube(this.value); } }); function searchYouTube(query) { fetch( `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=10&q=${encodeURIComponent(query)}&key=${API_KEY}` ) .then((res) => res.json()) .then((data) => { const container = document.getElementById("search-results"); container.innerHTML = ""; data.items.forEach((item) => { const videoId = item.id.videoId; const title = item.snippet.title; const thumbnail = item.snippet.thumbnails.medium.url; const result = document.createElement("div"); result.className = "bg-gray-800 rounded-lg p-3 flex items-center space-x-4"; result.innerHTML = ` 
+    /* Views */
+    section { display: none; flex: 1; overflow: auto; padding: 0 10px; }
+    section.active { display: flex; flex-direction: column; }
 
-${title}
+    /* Search */
+    #searchBar { display: flex; margin: 10px 0; }
+    #searchInput {
+      flex: 1; padding: 8px 12px; border: none; border-radius: 20px 0 0 20px;
+      font-size: 1rem;
+    }
+    #searchBtn {
+      background: #1db954; border: none; padding: 0 15px; border-radius: 0 20px 20px 0;
+      font-size: 1.2rem; color: #fff;
+    }
 
-Play 
+    #results, #favoritesList {
+      flex: 1; overflow-y: auto; margin-bottom: 80px;
+    }
+    .item {
+      display: flex; align-items: center; margin: 8px 0;
+      background: #1e1e1e; border-radius: 8px; padding: 6px;
+    }
+    .item img { width: 60px; height: 60px; border-radius: 4px; }
+    .info { flex: 1; margin-left: 10px; font-size: 0.9rem; }
+    .info p { margin-bottom: 4px; }
+    .info .title { font-weight: bold; }
+    .info .channel { color: #bbb; font-size: 0.8rem; }
 
-`; container.appendChild(result); }); }); } function playYouTubeAudio(videoId) { const iframe = document.createElement("iframe"); iframe.style.display = "none"; iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&controls=0&rel=0&modestbranding=1`; iframe.setAttribute("allow", "autoplay"); document.body.appendChild(iframe); document.getElementById("album-art").src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`; document.getElementById("song-title").textContent = "Now Playing..."; document.getElementById("artist-name").textContent = "YouTube"; } 
+    .btn {
+      background: none; border: none; color: #1db954; font-size: 1.4rem;
+      margin-left: 8px; cursor: pointer;
+    }
+
+    /* Player Footer */
+    #playerUI {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: #181818; padding: 10px;
+      display: flex; flex-direction: column; align-items: center;
+      border-top: 1px solid #333;
+    }
+    #playerUI.hidden { display: none; }
+
+    #nowPlaying {
+      display: flex; align-items: center; width: 100%;
+    }
+    #nowPlaying img {
+      width: 50px; height: 50px; border-radius: 4px;
+    }
+    #trackInfo { flex: 1; margin-left: 10px; font-size: 0.9rem; }
+    #trackInfo .title { font-weight: bold; }
+
+    #controls {
+      margin: 8px 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #controls button {
+      background: none; border: none; color: #fff; font-size: 1.6rem;
+      margin: 0 15px; cursor: pointer;
+    }
+    #progress {
+      width: 100%; margin: 5px 0;
+    }
+    #volume {
+      width: 80%; margin-top: 5px;
+    }
+
+    /* Hide YouTube iframe */
+    #playerFrame { display: none; }
+  </style>
+</head>
+<body>
+  <!-- Header with routing buttons -->
+  <header>
+    <button id="homeBtn"><i class="fa fa-music"></i></button>
+    <h1>My Player</h1>
+    <button id="favBtn"><i class="fa fa-heart"></i></button>
+  </header>
+
+  <!-- Search/Results View -->
+  <section id="home" class="active">
+    <div id="searchBar">
+      <input type="text" id="searchInput" placeholder="Search for music…" />
+      <button id="searchBtn"><i class="fa fa-search"></i></button>
+    </div>
+    <div id="results"></div>
+  </section>
+
+  <!-- Favorites View -->
+  <section id="favorites">
+    <h2>Your Favorites</h2>
+    <div id="favoritesList"></div>
+  </section>
+
+  <!-- Player UI -->
+  <div id="playerUI" class="hidden">
+    <div id="nowPlaying">
+      <img id="npThumb" src="" alt="Album Art" />
+      <div id="trackInfo">
+        <div class="title" id="npTitle"></div>
+        <div class="channel" id="npChannel"></div>
+      </div>
+      <button id="toggleFav" class="btn"><i class="fa fa-heart"></i></button>
+    </div>
+    <div id="controls">
+      <button id="prev"><i class="fa fa-backward"></i></button>
+      <button id="playPause"><i class="fa fa-play"></i></button>
+      <button id="next"><i class="fa fa-forward"></i></button>
+    </div>
+    <input type="range" id="progress" min="0" max="100" value="0" />
+    <input type="range" id="volume" min="0" max="100" value="100" />
+  </div>
+
+  <!-- YouTube Player (hidden) -->
+  <div id="playerFrame"></div>
+  <script src="https://www.youtube.com/iframe_api"></script>
+  <script>
+    // --- CONFIGURE YOUR KEY HERE ---
+    const API_KEY = 'AIzaSyAiZDuUwQMfUaP7ToFZfIdNrRRTwIqcfi0';
+
+    // --- STATE ---
+    let player, playlist = [], currentIndex = 0;
+    let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+
+    // --- DOM REFS ---
+    const homeSec = document.getElementById('home'),
+          favSec  = document.getElementById('favorites'),
+          homeBtn = document.getElementById('homeBtn'),
+          favBtn  = document.getElementById('favBtn'),
+          results = document.getElementById('results'),
+          favList = document.getElementById('favoritesList'),
+          searchInput = document.getElementById('searchInput'),
+          searchBtn   = document.getElementById('searchBtn'),
+          playerUI    = document.getElementById('playerUI'),
+          npThumb     = document.getElementById('npThumb'),
+          npTitle     = document.getElementById('npTitle'),
+          npChannel   = document.getElementById('npChannel'),
+          toggleFav   = document.getElementById('toggleFav'),
+          playPause   = document.getElementById('playPause'),
+          prevBtn     = document.getElementById('prev'),
+          nextBtn     = document.getElementById('next'),
+          progress    = document.getElementById('progress'),
+          volume      = document.getElementById('volume');
+
+    // -- ROUTING -->
+    homeBtn.onclick = ()=>showView('home');
+    favBtn.onclick  = ()=>{ showView('favorites'); renderFavorites(); };
+
+    function showView(id) {
+      [homeSec, favSec].forEach(s=>s.id===id? s.classList.add('active'): s.classList.remove('active'));
+    }
+
+    // --- YouTube IFrame API setup ---
+    function onYouTubeIframeAPIReady() {
+      player = new YT.Player('playerFrame', {
+        height: '0', width: '0', videoId: '',
+        playerVars: { 'playsinline': 1, 'controls': 0 },
+        events: {
+          'onStateChange': onPlayerStateChange
+        }
+      });
+    }
+
+    // --- SEARCH FUNCTION ---
+    searchBtn.onclick = async () => {
+      let q = searchInput.value.trim();
+      if (!q) return;
+      results.innerHTML = '<p>Searching…</p>';
+      const res = await fetch(
+        `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=10&q=${encodeURIComponent(q)}&key=${API_KEY}`
+      );
+      const data = await res.json();
+      playlist = data.items;
+      currentIndex = -1;
+      results.innerHTML = '';
+      data.items.forEach((it,i)=> {
+        const div = document.createElement('div');
+        div.className = 'item';
+        div.innerHTML = `
+          <img src="${it.snippet.thumbnails.default.url}" alt="">
+          <div class="info">
+            <p class="title">${it.snippet.title}</p>
+            <p class="channel">${it.snippet.channelTitle}</p>
+          </div>
+          <button class="btn playBtn" data-index="${i}"><i class="fa fa-play"></i></button>
+          <button class="btn favBtn" data-id="${it.id.videoId}"
+                  data-title="${it.snippet.title}"
+                  data-thumb="${it.snippet.thumbnails.default.url}">
+            <i class="fa fa-heart${favorites.find(f=>f.id===it.id.videoId)?'':'-o'}"></i>
+          </button>`;
+        results.appendChild(div);
+      });
+      // bind result play/fav buttons
+      document.querySelectorAll('.playBtn').forEach(b=>
+        b.onclick = () => playIndex(+b.dataset.index)
+      );
+      document.querySelectorAll('.favBtn').forEach(b=>
+        b.onclick = () => toggleFavorite(b)
+      );
+    };
+
+    // --- PLAYBACK CONTROLS ---
+    function playIndex(i) {
+      currentIndex = i;
+      let vid = playlist[i].id.videoId;
+      player.loadVideoById(vid);
+      updateNowPlaying(playlist[i]);
+      playerUI.classList.remove('hidden');
+    }
+    function onPlayerStateChange(e) {
+      if (e.data===YT.PlayerState.PLAYING) {
+        playPause.innerHTML = '<i class="fa fa-pause"></i>';
+        updateProgress();
+      } else {
+        playPause.innerHTML = '<i class="fa fa-play"></i>';
+      }
+    }
+    playPause.onclick = () => {
+      let s = player.getPlayerState();
+      if (s===YT.PlayerState.PLAYING) player.pauseVideo();
+      else player.playVideo();
+    };
+    prevBtn.onclick = ()=> {
+      if (currentIndex>0) playIndex(currentIndex-1);
+    };
+    nextBtn.onclick = ()=> {
+      if (currentIndex<playlist.length-1) playIndex(currentIndex+1);
+    };
+    progress.oninput = ()=> {
+      if (!player.getDuration) return;
+      let d = player.getDuration();
+      player.seekTo(d * (progress.value/100), true);
+    };
+    function updateProgress() {
+      if (!player.getCurrentTime) return;
+      let c = player.getCurrentTime(),
+          d = player.getDuration();
+      progress.value = (c/d)*100;
+      requestAnimationFrame(updateProgress);
+    }
+    volume.oninput = ()=> player.setVolume(volume.value);
+
+    // --- NOW PLAYING UI ---
+    function updateNowPlaying(item) {
+      npThumb.src     = item.snippet.thumbnails.default.url;
+      npTitle.textContent   = item.snippet.title;
+      npChannel.textContent = item.snippet.channelTitle;
+      toggleFav.innerHTML = `<i class="fa fa-heart${favorites.find(f=>f.id===item.id.videoId)?'':'-o'}"></i>`;
+      toggleFav.dataset.id    = item.id.videoId;
+      toggleFav.dataset.title = item.snippet.title;
+      toggleFav.dataset.thumb = item.snippet.thumbnails.default.url;
+    }
+    toggleFav.onclick = ()=> toggleFavorite(toggleFav);
+
+    // --- FAVORITES ---
+    function toggleFavorite(btn) {
+      let id    = btn.dataset.id,
+          title = btn.dataset.title,
+          thumb = btn.dataset.thumb;
+      let idx = favorites.findIndex(f=>f.id===id);
+      if (idx>=0) {
+        favorites.splice(idx,1);
+      } else {
+        favorites.push({ id, title, thumb });
+      }
+      localStorage.setItem('favorites', JSON.stringify(favorites));
+      // update UI icons
+      document.querySelectorAll(`button[data-id="${id}"] i`).forEach(i=>{
+        i.className = favorites.find(f=>f.id===id)?'fa fa-heart':'fa fa-heart-o';
+      });
+      updateNowPlaying(playlist[currentIndex]||{id:{videoId:null}});
+    }
+
+    function renderFavorites() {
+      favList.innerHTML = favorites.length
+        ? ''
+        : '<p>No favorites yet.</p>';
+      favorites.forEach((f,i)=>{
+        const div = document.createElement('div');
+        div.className = 'item';
+        div.innerHTML = `
+          <img src="${f.thumb}" alt="">
+          <div class="info">
+            <p class="title">${f.title}</p>
+          </div>
+          <button class="btn playBtnFav" data-id="${f.id}" data-index="${i}">
+            <i class="fa fa-play"></i>
+          </button>
+          <button class="btn removeFav" data-id="${f.id}">
+            <i class="fa fa-trash"></i>
+          </button>`;
+        favList.appendChild(div);
+      });
+      document.querySelectorAll('.playBtnFav').forEach(b=>
+        b.onclick = ()=> {
+          // find in playlist or just load by id
+          player.loadVideoById(b.dataset.id);
+          playerUI.classList.remove('hidden');
+        }
+      );
+      document.querySelectorAll('.removeFav').forEach(b=>
+        b.onclick = ()=> {
+          favorites = favorites.filter(f=>f.id!==b.dataset.id);
+          localStorage.setItem('favorites', JSON.stringify(favorites));
+          renderFavorites();
+        }
+      );
+    }
+
+    // Keep playing when you switch between our “views”
+  </script>
+</body>
+</html>
