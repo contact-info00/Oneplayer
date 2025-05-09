@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Music Search Player</title>
+  <title>Clean Music Search</title>
   <style>
     body {
       margin: 0;
@@ -24,8 +24,6 @@
       border-radius: 50px;
       overflow: hidden;
       box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-      position: relative;
-      z-index: 10;
     }
 
     .search-bar {
@@ -52,12 +50,11 @@
       color: black;
       width: 90%;
       max-width: 500px;
-      border-radius: 0 0 12px 12px;
+      border-radius: 0 0 10px 10px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-      text-align: left;
-      position: absolute;
-      top: 100%;
-      left: 0;
+      margin-top: -10px;
+      position: relative;
+      z-index: 5;
     }
 
     .suggestions div {
@@ -66,7 +63,7 @@
     }
 
     .suggestions div:hover {
-      background-color: #f0f0f0;
+      background: #f0f0f0;
     }
 
     .result-card {
@@ -112,9 +109,10 @@
     }
 
     iframe {
-      width: 1px;
-      height: 1px;
-      border: none;
+      display: block;
+      width: 100%;
+      height: 0;
+      visibility: hidden;
     }
   </style>
 </head>
@@ -127,8 +125,6 @@
   <div id="suggestions" class="suggestions"></div>
 
   <div id="resultsContainer"></div>
-
-  <!-- FIXED iframe (autoplay works on mobile) -->
   <iframe id="ytPlayer" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 
   <script>
@@ -148,7 +144,7 @@
         return;
       }
 
-      fetch(`https://corsproxy.io/?https://suggestqueries.google.com/complete/search?client=firefox&ds=yt&q=${encodeURIComponent(query)}`)
+      fetch(`https://suggestqueries.google.com/complete/search?client=firefox&ds=yt&q=${encodeURIComponent(query)}`)
         .then(response => response.json())
         .then(data => {
           const suggestionsBox = document.getElementById('suggestions');
@@ -191,7 +187,7 @@
         card.onclick = () => {
           const iframe = document.getElementById('ytPlayer');
           iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${videoId}`;
-          console.log("Now playing:", title);
+          iframe.style.height = '0px';
         };
 
         card.innerHTML = `
